@@ -5,6 +5,7 @@ import com.unip.api.sector.Sector;
 import com.unip.api.sector.SectorRepository;
 import com.unip.api.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class IncidentService {
@@ -22,6 +23,13 @@ public class IncidentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Sector not found"));
         return incidents.save(new Incident(req.title(), req.description(),
                 req.type(), req.severity(), sector, req.occurredOn()));
+    }
+
+    @Transactional
+    public Incident registerRootCause(Long id, String rootCause) {
+        Incident incident = findById(id);
+        incident.registerRootCause(rootCause);
+        return incident; // saved automatically at the end of the transaction
     }
 
     public Incident findById(Long id) {

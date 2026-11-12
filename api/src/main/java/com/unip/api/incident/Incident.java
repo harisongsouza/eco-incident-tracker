@@ -1,6 +1,7 @@
 package com.unip.api.incident;
 
 import com.unip.api.sector.Sector;
+import com.unip.api.shared.exception.BusinessRuleException;
 import com.unip.api.shared.exception.InvalidTransitionException;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -43,6 +44,9 @@ public class Incident {
     @Column(nullable = false)
     private int cycle;
 
+    @Column(length = 2000)
+    private String rootCause;
+
     protected Incident() {}
 
     public Incident(String title, String description, IncidentType type,
@@ -68,6 +72,7 @@ public class Incident {
     public LocalDate getOccurredOn() { return occurredOn; }
     public LocalDateTime getRegisteredAt() { return registeredAt; }
     public int getCycle() { return cycle; }
+    public String getRootCause() { return rootCause; }
 
     public void transitionTo(IncidentStatus target) {
         if (!status.canTransitionTo(target)) {
@@ -75,5 +80,18 @@ public class Incident {
                     "Cannot move incident from " + status + " to " + target);
         }
         this.status = target;
+    }
+
+    public void requireStatus(IncidentStatus expected, String operation) {
+        if (status != expected) {
+            throw new BusinessRuleException(
+                    "Cannot " + operation + " while incident is " + status
+                            + " (required: " + expected + ")");
+        }
+    }
+
+    public void registerRootCause(String rootCause) {
+        requireStatus(IncidentStatus.UNDER_ANALYSIS, "register root cause");
+        this.rootCause = rootCause;
     }
 }

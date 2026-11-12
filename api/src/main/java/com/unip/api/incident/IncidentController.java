@@ -36,4 +36,15 @@ public class IncidentController {
     public IncidentResponse findById(@PathVariable Long id) {
         return IncidentResponse.from(service.findById(id));
     }
+
+    @PutMapping("/{id}/root-cause")
+    public IncidentResponse registerRootCause(@PathVariable Long id,
+                                              @Valid @RequestBody RootCauseRequest req) {
+        return IncidentResponse.from(service.registerRootCause(id, req.rootCause()));
+    }
+
+    @PostMapping("/{id}/start-execution")
+    public IncidentResponse startExecution(@PathVariable Long id) {
+        return IncidentResponse.from(workflow.startExecution(id));
+    }
 }
