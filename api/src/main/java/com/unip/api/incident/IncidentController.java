@@ -12,9 +12,16 @@ import java.net.URI;
 public class IncidentController {
 
     private final IncidentService service;
+    private final IncidentWorkflowService workflow;
 
-    public IncidentController(IncidentService service) {
+    public IncidentController(IncidentService service, IncidentWorkflowService workflow) {
         this.service = service;
+        this.workflow = workflow;
+    }
+
+    @PostMapping("/{id}/analyze")
+    public IncidentResponse analyze(@PathVariable Long id) {
+        return IncidentResponse.from(workflow.startAnalysis(id));
     }
 
     @PostMapping

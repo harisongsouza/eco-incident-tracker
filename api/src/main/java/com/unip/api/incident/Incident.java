@@ -1,6 +1,7 @@
 package com.unip.api.incident;
 
 import com.unip.api.sector.Sector;
+import com.unip.api.shared.exception.InvalidTransitionException;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -67,4 +68,12 @@ public class Incident {
     public LocalDate getOccurredOn() { return occurredOn; }
     public LocalDateTime getRegisteredAt() { return registeredAt; }
     public int getCycle() { return cycle; }
+
+    public void transitionTo(IncidentStatus target) {
+        if (!status.canTransitionTo(target)) {
+            throw new InvalidTransitionException(
+                    "Cannot move incident from " + status + " to " + target);
+        }
+        this.status = target;
+    }
 }
