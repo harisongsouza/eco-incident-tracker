@@ -1,6 +1,7 @@
 package com.unip.api.action;
 
 import com.unip.api.incident.Incident;
+import com.unip.api.shared.exception.BusinessRuleException;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +35,11 @@ public class CorrectiveAction {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(length = 500)
+    private String completionNote;
+
+    private LocalDateTime completedAt;
+
     protected CorrectiveAction() {}
 
     public CorrectiveAction(Incident incident, String description,
@@ -55,4 +61,15 @@ public class CorrectiveAction {
     public ActionStatus getStatus() { return status; }
     public int getCycle() { return cycle; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getCompletionNote() { return completionNote; }
+    public LocalDateTime getCompletedAt() { return completedAt; }
+
+    public void complete(String note) {
+        if (status == ActionStatus.COMPLETED) {
+            throw new BusinessRuleException("Action is already completed");
+        }
+        this.status = ActionStatus.COMPLETED;
+        this.completionNote = note;
+        this.completedAt = LocalDateTime.now();
+    }
 }

@@ -1,5 +1,8 @@
 package com.unip.api.incident;
 
+import com.unip.api.check.EffectivenessCheck;
+import com.unip.api.check.dto.*;
+import org.springframework.http.HttpStatus;
 import com.unip.api.incident.dto.*;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +33,19 @@ public class IncidentController {
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(created.getId()).toUri();
         return ResponseEntity.created(location).body(IncidentResponse.from(created));
+    }
+
+    @PostMapping("/{id}/checks")
+    public ResponseEntity<CheckResponse> verify(@PathVariable Long id,
+                                                @Valid @RequestBody CheckRequest req) {
+        EffectivenessCheck check = workflow.verify(id, req.effective(), req.opinion());
+        return ResponseEntity.status(HttpStatus.CREATED).body(CheckResponse.from(check));
+    }
+
+    @PostMapping("/{id}/dismiss")
+    public IncidentResponse dismiss(@PathVariable Long id,
+                                    @Valid @RequestBody DismissRequest req) {
+        return IncidentResponse.from(workflow.dismiss(id, req.justification()));
     }
 
     @GetMapping("/{id}")

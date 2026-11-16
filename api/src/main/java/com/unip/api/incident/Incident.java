@@ -47,6 +47,8 @@ public class Incident {
     @Column(length = 2000)
     private String rootCause;
 
+    private LocalDateTime closedAt;
+
     protected Incident() {}
 
     public Incident(String title, String description, IncidentType type,
@@ -73,6 +75,7 @@ public class Incident {
     public LocalDateTime getRegisteredAt() { return registeredAt; }
     public int getCycle() { return cycle; }
     public String getRootCause() { return rootCause; }
+    public LocalDateTime getClosedAt() { return closedAt; }
 
     public void transitionTo(IncidentStatus target) {
         if (!status.canTransitionTo(target)) {
@@ -80,6 +83,15 @@ public class Incident {
                     "Cannot move incident from " + status + " to " + target);
         }
         this.status = target;
+        if (target == IncidentStatus.CLOSED) {
+            this.closedAt = LocalDateTime.now();
+        }
+    }
+
+    public void startNextCycle() {
+        requireStatus(IncidentStatus.UNDER_ANALYSIS, "start a new cycle");
+        this.cycle++;
+        this.rootCause = null; // a new cycle needs a new root cause analysis
     }
 
     public void requireStatus(IncidentStatus expected, String operation) {

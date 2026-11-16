@@ -7,11 +7,13 @@ import java.time.LocalDateTime;
 public record IncidentResponse(
         Long id, String title, String description, IncidentType type,
         Severity severity, IncidentStatus status, String sector,
-        LocalDate occurredOn, LocalDateTime registeredAt, int cycle, String rootCause
+        LocalDate occurredOn, LocalDateTime registeredAt, int cycle,
+        String rootCause, LocalDateTime closedAt
 ) {
     public static IncidentResponse from(Incident i) {
         return new IncidentResponse(i.getId(), i.getTitle(), i.getDescription(),
                 i.getType(), i.getSeverity(), i.getStatus(), i.getSector().getName(),
-                i.getOccurredOn(), i.getRegisteredAt(), i.getCycle(), i.getRootCause());
+                i.getOccurredOn(), i.getRegisteredAt(), i.getCycle(),
+                i.getRootCause(), i.getClosedAt());
     }
 }
