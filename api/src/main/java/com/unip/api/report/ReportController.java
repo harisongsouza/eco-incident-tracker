@@ -2,9 +2,11 @@ package com.unip.api.report;
 
 import com.unip.api.report.dto.OverdueActionResponse;
 import com.unip.api.report.dto.SummaryResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+@PreAuthorize("hasAnyRole('ENVIRONMENTAL_OFFICER','MANAGER')")
 @RestController
 @RequestMapping("/reports")
 public class ReportController {

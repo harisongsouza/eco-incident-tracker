@@ -1,5 +1,6 @@
 package com.unip.api.incident;
 
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,6 +12,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WithUserDetails("officer@demo.com")
 @SpringBootTest
 @AutoConfigureMockMvc
 class IncidentControllerTest {

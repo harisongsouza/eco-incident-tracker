@@ -1,5 +1,6 @@
 package com.unip.api.incident;
 
+import org.springframework.security.test.context.support.WithUserDetails;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WithUserDetails("officer@demo.com")
 @SpringBootTest
 @AutoConfigureMockMvc
 class IncidentQueryTest {

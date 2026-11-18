@@ -12,6 +12,7 @@ import java.util.List;
 public interface CorrectiveActionRepository extends JpaRepository<CorrectiveAction, Long> {
     long countByIncidentIdAndCycle(Long incidentId, int cycle);
     long countByIncidentIdAndCycleAndStatus(Long incidentId, int cycle, ActionStatus status);
+    boolean existsByIncidentIdAndResponsibleId(Long incidentId, Long responsibleId);
     List<CorrectiveAction> findByIncidentIdOrderByIdAsc(Long incidentId);
 
     @Query("select a from CorrectiveAction a "

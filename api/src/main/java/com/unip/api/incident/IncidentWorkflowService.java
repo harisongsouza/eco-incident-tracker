@@ -7,8 +7,12 @@ import com.unip.api.check.EffectivenessCheck;
 import com.unip.api.check.EffectivenessCheckRepository;
 import com.unip.api.history.StatusHistory;
 import com.unip.api.history.StatusHistoryRepository;
+import com.unip.api.security.CurrentUser;
 import com.unip.api.shared.exception.BusinessRuleException;
+import com.unip.api.shared.exception.ForbiddenException;
 import com.unip.api.shared.exception.ResourceNotFoundException;
+import com.unip.api.user.Role;
+import com.unip.api.user.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,15 +23,18 @@ public class IncidentWorkflowService {
     private final StatusHistoryRepository history;
     private final CorrectiveActionRepository actions;
     private final EffectivenessCheckRepository checks;
+    private final CurrentUser currentUser;
 
     public IncidentWorkflowService(IncidentService incidentService,
                                    StatusHistoryRepository history,
                                    CorrectiveActionRepository actions,
-                                   EffectivenessCheckRepository checks) {
+                                   EffectivenessCheckRepository checks,
+                                   CurrentUser currentUser) {
         this.incidentService = incidentService;
         this.history = history;
         this.actions = actions;
         this.checks = checks;
+        this.currentUser = currentUser;
     }
 
     @Transactional
@@ -58,6 +65,13 @@ public class IncidentWorkflowService {
                 .orElseThrow(() -> new ResourceNotFoundException("Corrective action not found"));
         Incident incident = action.getIncident();
 
+        User user = currentUser.get();
+        boolean isResponsible = action.getResponsible().getId().equals(user.getId());
+        if (!isResponsible && user.getRole() != Role.ENVIRONMENTAL_OFFICER) {
+            throw new ForbiddenException(
+                    "Only the responsible user or an environmental officer can complete this action");
+        }
+
         incident.requireStatus(IncidentStatus.IN_PROGRESS, "complete an action");
         action.complete(note);
 
@@ -76,8 +90,8 @@ public class IncidentWorkflowService {
         incident.requireStatus(IncidentStatus.AWAITING_VERIFICATION, "register a verification");
 
         // created BEFORE the cycle changes, so it records the cycle being verified
-        EffectivenessCheck check = checks.save(new EffectivenessCheck(incident, effective, opinion));
-
+        EffectivenessCheck check = checks.save(
+                new EffectivenessCheck(incident, effective, opinion, currentUser.get()));
         if (effective) {
             move(incident, IncidentStatus.CLOSED, "Verified: effective");
         } else {
@@ -97,6 +111,6 @@ public class IncidentWorkflowService {
     private void move(Incident incident, IncidentStatus target, String comment) {
         IncidentStatus previous = incident.getStatus(); // read BEFORE the change
         incident.transitionTo(target);
-        history.save(new StatusHistory(incident, previous, target, comment));
+        history.save(new StatusHistory(incident, previous, target, comment, currentUser.get()));
     }
 }

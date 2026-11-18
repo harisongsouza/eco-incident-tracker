@@ -16,7 +16,7 @@ public class CheckService {
     }
 
     public List<EffectivenessCheck> list(Long incidentId) {
-        incidentService.findById(incidentId);
+        incidentService.findVisible(incidentId);
         return checks.findByIncidentIdOrderByIdAsc(incidentId);
     }
 }

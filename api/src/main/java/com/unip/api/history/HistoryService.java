@@ -16,7 +16,7 @@ public class HistoryService {
     }
 
     public List<StatusHistory> list(Long incidentId) {
-        incidentService.findById(incidentId); // 404 if the incident doesn't exist
+        incidentService.findVisible(incidentId); // 404 if the incident doesn't exist
         return history.findByIncidentIdOrderByChangedAtAsc(incidentId);
     }
 }

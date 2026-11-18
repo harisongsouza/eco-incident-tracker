@@ -9,7 +9,7 @@ public record OverdueActionResponse(Long actionId, Long incidentId, String incid
                                     LocalDate deadline, long daysOverdue) {
     public static OverdueActionResponse from(CorrectiveAction a, LocalDate today) {
         return new OverdueActionResponse(a.getId(), a.getIncident().getId(),
-                a.getIncident().getTitle(), a.getDescription(), a.getResponsible(),
+                a.getIncident().getTitle(), a.getDescription(), a.getResponsible().getName(),
                 a.getDeadline(), ChronoUnit.DAYS.between(a.getDeadline(), today));
     }
 }

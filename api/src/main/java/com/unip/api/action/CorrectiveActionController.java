@@ -3,6 +3,7 @@ package com.unip.api.action;
 import com.unip.api.action.dto.*;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
@@ -18,6 +19,7 @@ public class CorrectiveActionController {
         this.service = service;
     }
 
+    @PreAuthorize("hasRole('ENVIRONMENTAL_OFFICER')")
     @PostMapping
     public ResponseEntity<ActionResponse> create(@PathVariable Long incidentId,
                                                  @Valid @RequestBody ActionRequest req) {

@@ -5,6 +5,6 @@ import java.time.LocalDate;
 
 public record ActionRequest(
         @NotBlank @Size(max = 500) String description,
-        @NotBlank @Size(max = 120) String responsible,
+        @NotNull Long responsibleId,
         @NotNull @Future LocalDate deadline
 ) {}

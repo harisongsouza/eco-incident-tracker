@@ -2,6 +2,7 @@ package com.unip.api.action;
 
 import com.unip.api.incident.Incident;
 import com.unip.api.shared.exception.BusinessRuleException;
+import com.unip.api.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,8 +20,8 @@ public class CorrectiveAction {
     @Column(nullable = false, length = 500)
     private String description;
 
-    @Column(nullable = false)
-    private String responsible;
+    @ManyToOne(optional = false)
+    private User responsible;
 
     @Column(nullable = false)
     private LocalDate deadline;
@@ -43,7 +44,7 @@ public class CorrectiveAction {
     protected CorrectiveAction() {}
 
     public CorrectiveAction(Incident incident, String description,
-                            String responsible, LocalDate deadline) {
+                            User responsible, LocalDate deadline) {
         this.incident = incident;
         this.description = description;
         this.responsible = responsible;
@@ -56,7 +57,7 @@ public class CorrectiveAction {
     public Long getId() { return id; }
     public Incident getIncident() { return incident; }
     public String getDescription() { return description; }
-    public String getResponsible() { return responsible; }
+    public User getResponsible() { return responsible; }
     public LocalDate getDeadline() { return deadline; }
     public ActionStatus getStatus() { return status; }
     public int getCycle() { return cycle; }

@@ -3,6 +3,7 @@ package com.unip.api.incident;
 import com.unip.api.sector.Sector;
 import com.unip.api.shared.exception.BusinessRuleException;
 import com.unip.api.shared.exception.InvalidTransitionException;
+import com.unip.api.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -49,10 +50,13 @@ public class Incident {
 
     private LocalDateTime closedAt;
 
+    @ManyToOne(optional = false)
+    private User registeredBy;
+
     protected Incident() {}
 
     public Incident(String title, String description, IncidentType type,
-                    Severity severity, Sector sector, LocalDate occurredOn) {
+                    Severity severity, Sector sector, LocalDate occurredOn, User registeredBy) {
         this.title = title;
         this.description = description;
         this.type = type;
@@ -62,6 +66,7 @@ public class Incident {
         this.status = IncidentStatus.OPEN;
         this.registeredAt = LocalDateTime.now();
         this.cycle = 1;
+        this.registeredBy = registeredBy;
     }
 
     public Long getId() { return id; }
@@ -76,6 +81,7 @@ public class Incident {
     public int getCycle() { return cycle; }
     public String getRootCause() { return rootCause; }
     public LocalDateTime getClosedAt() { return closedAt; }
+    public User getRegisteredBy() { return registeredBy; }
 
     public void transitionTo(IncidentStatus target) {
         if (!status.canTransitionTo(target)) {

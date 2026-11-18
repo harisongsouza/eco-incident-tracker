@@ -1,5 +1,6 @@
 package com.unip.api.incident;
 
+import org.springframework.security.test.context.support.WithUserDetails;
 import com.jayway.jsonpath.JsonPath;
 import com.unip.api.history.StatusHistoryRepository;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WithUserDetails("officer@demo.com")
 @SpringBootTest
 @AutoConfigureMockMvc
 class IncidentCycleTest {
@@ -187,7 +189,7 @@ class IncidentCycleTest {
         return post("/incidents/{id}/actions", incidentId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
-                {"description":"Replace the tap gasket","responsible":"John",
+                {"description":"Replace the tap gasket","responsibleId":2,
                  "deadline":"%s"}""".formatted(LocalDate.now().plusDays(3)));
     }
 

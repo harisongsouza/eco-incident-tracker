@@ -1,10 +1,12 @@
 package com.unip.api.report;
 
+import org.springframework.security.test.context.support.WithUserDetails;
 import com.jayway.jsonpath.JsonPath;
 import com.unip.api.action.CorrectiveAction;
 import com.unip.api.action.CorrectiveActionRepository;
 import com.unip.api.incident.Incident;
 import com.unip.api.incident.IncidentRepository;
+import com.unip.api.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -19,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WithUserDetails("officer@demo.com")
 @SpringBootTest
 @AutoConfigureMockMvc
 class ReportTest {
@@ -26,6 +29,7 @@ class ReportTest {
     @Autowired MockMvc mvc;
     @Autowired IncidentRepository incidentRepository;
     @Autowired CorrectiveActionRepository actionRepository;
+    @Autowired UserRepository users;
 
     @Test
     void summaryCountsNewIncident() throws Exception {
@@ -46,7 +50,7 @@ class ReportTest {
 
         Incident incident = incidentRepository.findById(id).orElseThrow();
         actionRepository.save(new CorrectiveAction(
-                incident, "Fix it", "John", LocalDate.now().minusDays(2)));
+                incident, "Fix it", users.findByEmail("employee2@demo.com").orElseThrow(), LocalDate.now().minusDays(2)));
 
         mvc.perform(get("/reports/overdue"))
                 .andExpect(status().isOk())
@@ -60,7 +64,7 @@ class ReportTest {
         mvc.perform(post("/incidents/{id}/actions", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                    {"description":"Fix it","responsible":"John","deadline":"%s"}"""
+                    {"description":"Fix it","responsibleId":2,"deadline":"%s"}"""
                                 .formatted(LocalDate.now().plusDays(5))))
                 .andExpect(status().isCreated());
 

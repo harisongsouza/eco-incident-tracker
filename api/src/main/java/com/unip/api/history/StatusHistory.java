@@ -2,6 +2,7 @@ package com.unip.api.history;
 
 import com.unip.api.incident.Incident;
 import com.unip.api.incident.IncidentStatus;
+import com.unip.api.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -29,15 +30,19 @@ public class StatusHistory {
     @Column(length = 500)
     private String comment;
 
+    @ManyToOne(optional = false)
+    private User changedBy;
+
     protected StatusHistory() {}
 
     public StatusHistory(Incident incident, IncidentStatus previousStatus,
-                         IncidentStatus newStatus, String comment) {
+                         IncidentStatus newStatus, String comment, User changedBy) {
         this.incident = incident;
         this.previousStatus = previousStatus;
         this.newStatus = newStatus;
         this.comment = comment;
         this.changedAt = LocalDateTime.now();
+        this.changedBy = changedBy;
     }
 
     public Long getId() { return id; }
@@ -46,4 +51,5 @@ public class StatusHistory {
     public IncidentStatus getNewStatus() { return newStatus; }
     public LocalDateTime getChangedAt() { return changedAt; }
     public String getComment() { return comment; }
+    public User getChangedBy() { return changedBy; }
 }

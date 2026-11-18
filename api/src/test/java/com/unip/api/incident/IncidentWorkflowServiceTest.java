@@ -1,5 +1,6 @@
 package com.unip.api.incident;
 
+import org.springframework.security.test.context.support.WithUserDetails;
 import com.jayway.jsonpath.JsonPath;
 import com.unip.api.history.StatusHistory;
 import com.unip.api.history.StatusHistoryRepository;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WithUserDetails("officer@demo.com")
 @SpringBootTest
 @AutoConfigureMockMvc
 class IncidentWorkflowServiceTest {

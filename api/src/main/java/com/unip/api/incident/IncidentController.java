@@ -1,5 +1,6 @@
 package com.unip.api.incident;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.unip.api.check.EffectivenessCheck;
 import com.unip.api.check.dto.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,6 +26,7 @@ public class IncidentController {
         this.workflow = workflow;
     }
 
+    @PreAuthorize("hasRole('ENVIRONMENTAL_OFFICER')")
     @PostMapping("/{id}/analyze")
     public IncidentResponse analyze(@PathVariable Long id) {
         return IncidentResponse.from(workflow.startAnalysis(id));
@@ -38,6 +40,7 @@ public class IncidentController {
         return ResponseEntity.created(location).body(IncidentResponse.from(created));
     }
 
+    @PreAuthorize("hasRole('ENVIRONMENTAL_OFFICER')")
     @PostMapping("/{id}/checks")
     public ResponseEntity<CheckResponse> verify(@PathVariable Long id,
                                                 @Valid @RequestBody CheckRequest req) {
@@ -45,6 +48,7 @@ public class IncidentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(CheckResponse.from(check));
     }
 
+    @PreAuthorize("hasRole('ENVIRONMENTAL_OFFICER')")
     @PostMapping("/{id}/dismiss")
     public IncidentResponse dismiss(@PathVariable Long id,
                                     @Valid @RequestBody DismissRequest req) {
@@ -53,7 +57,7 @@ public class IncidentController {
 
     @GetMapping("/{id}")
     public IncidentResponse findById(@PathVariable Long id) {
-        return IncidentResponse.from(service.findById(id));
+        return IncidentResponse.from(service.findVisible(id));
     }
 
     @GetMapping
@@ -67,12 +71,14 @@ public class IncidentController {
                 .map(IncidentResponse::from).toList();
     }
 
+    @PreAuthorize("hasRole('ENVIRONMENTAL_OFFICER')")
     @PutMapping("/{id}/root-cause")
     public IncidentResponse registerRootCause(@PathVariable Long id,
                                               @Valid @RequestBody RootCauseRequest req) {
         return IncidentResponse.from(service.registerRootCause(id, req.rootCause()));
     }
 
+    @PreAuthorize("hasRole('ENVIRONMENTAL_OFFICER')")
     @PostMapping("/{id}/start-execution")
     public IncidentResponse startExecution(@PathVariable Long id) {
         return IncidentResponse.from(workflow.startExecution(id));
