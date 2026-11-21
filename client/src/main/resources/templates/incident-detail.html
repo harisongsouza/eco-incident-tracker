@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Incident')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<div class="container">
+    <a class="btn btn-sm btn-outline-secondary mb-3" th:href="@{/incidents}">&larr; Back to list</a>
+
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <h1 class="h4 mb-0">
+            #<span th:text="${incident.id()}">1</span>
+            <span th:text="${incident.title()}">Title</span>
+        </h1>
+        <div>
+            <span class="badge" th:classappend="${@statusStyle.status(incident.status())}"
+                  th:text="${incident.status()}">OPEN</span>
+            <span class="badge" th:classappend="${@statusStyle.severity(incident.severity())}"
+                  th:text="${incident.severity()}">LOW</span>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <p th:text="${incident.description()}">Description</p>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Type</dt>
+                <dd class="col-sm-9" th:text="${incident.type()}">TYPE</dd>
+                <dt class="col-sm-3">Sector</dt>
+                <dd class="col-sm-9" th:text="${incident.sector()}">Sector</dd>
+                <dt class="col-sm-3">Occurred on</dt>
+                <dd class="col-sm-9" th:text="${#temporals.format(incident.occurredOn(), 'dd/MM/yyyy')}">date</dd>
+                <dt class="col-sm-3">Registered</dt>
+                <dd class="col-sm-9">
+                    <span th:text="${#temporals.format(incident.registeredAt(), 'dd/MM/yyyy HH:mm')}">date</span>
+                    by <span th:text="${incident.registeredBy()}">User</span>
+                </dd>
+                <dt class="col-sm-3">Cycle</dt>
+                <dd class="col-sm-9" th:text="${incident.cycle()}">1</dd>
+                <dt class="col-sm-3">Root cause</dt>
+                <dd class="col-sm-9">
+                    <span th:if="${incident.rootCause() != null}" th:text="${incident.rootCause()}">cause</span>
+                    <span th:if="${incident.rootCause() == null}" class="text-muted">Not registered yet</span>
+                </dd>
+                <dt class="col-sm-3" th:if="${incident.closedAt() != null}">Closed at</dt>
+                <dd class="col-sm-9" th:if="${incident.closedAt() != null}"
+                    th:text="${#temporals.format(incident.closedAt(), 'dd/MM/yyyy HH:mm')}">date</dd>
+            </dl>
+        </div>
+    </div>
+
+    <h2 class="h5">Corrective actions</h2>
+    <div class="table-responsive mb-4">
+        <table class="table align-middle">
+            <thead>
+            <tr><th>Cycle</th><th>Description</th><th>Responsible</th>
+                <th>Deadline</th><th>Status</th><th>Completion note</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${actions}" th:classappend="${a.overdue()} ? 'table-danger'">
+                <td th:text="${a.cycle()}">1</td>
+                <td th:text="${a.description()}">Description</td>
+                <td th:text="${a.responsible()}">Name</td>
+                <td>
+                    <span th:text="${#temporals.format(a.deadline(), 'dd/MM/yyyy')}">date</span>
+                    <span class="badge bg-danger" th:if="${a.overdue()}">Overdue</span>
+                </td>
+                <td th:text="${a.status()}">PENDING</td>
+                <td th:text="${a.completionNote()}">Note</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(actions)}">
+                <td colspan="6" class="text-muted text-center">No actions registered.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="h5">Effectiveness checks</h2>
+    <div class="table-responsive mb-4">
+        <table class="table align-middle">
+            <thead>
+            <tr><th>Cycle</th><th>Result</th><th>Opinion</th><th>Checked by</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${checks}">
+                <td th:text="${c.cycle()}">1</td>
+                <td>
+                    <span class="badge bg-success" th:if="${c.effective()}">Effective</span>
+                    <span class="badge bg-danger" th:unless="${c.effective()}">Ineffective</span>
+                </td>
+                <td th:text="${c.opinion()}">Opinion</td>
+                <td th:text="${c.checkedBy()}">Name</td>
+                <td th:text="${#temporals.format(c.checkedAt(), 'dd/MM/yyyy HH:mm')}">date</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(checks)}">
+                <td colspan="5" class="text-muted text-center">No checks yet.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2 class="h5">History</h2>
+    <ul class="list-group mb-5">
+        <li class="list-group-item" th:each="h : ${history}">
+            <strong th:text="${h.previousStatus()} + ' → ' + ${h.newStatus()}">A → B</strong>
+            <span class="text-muted"
+                  th:text="'· ' + ${#temporals.format(h.changedAt(), 'dd/MM/yyyy HH:mm')} + ' · ' + ${h.changedBy()}">meta</span>
+            <div th:if="${h.comment() != null}" th:text="${h.comment()}">Comment</div>
+        </li>
+        <li class="list-group-item text-muted" th:if="${#lists.isEmpty(history)}">No changes yet.</li>
+    </ul>
+</div>
+</body>
+</html>

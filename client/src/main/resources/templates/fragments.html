@@ -9,7 +9,11 @@
 <body>
 <nav th:fragment="navbar" class="navbar navbar-dark bg-success mb-4">
     <div class="container">
-        <a class="navbar-brand" th:href="@{/}">Environmental Incidents</a>
+        <div class="d-flex align-items-center">
+            <a class="navbar-brand" th:href="@{/}">Environmental Incidents</a>
+            <a class="nav-link text-white" th:if="${currentUser != null}"
+               th:href="@{/incidents}">Incidents</a>
+        </div>
         <div class="d-flex align-items-center text-white" th:if="${currentUser != null}">
             <span class="me-3">
                 <span th:text="${currentUser.name}">Name</span>

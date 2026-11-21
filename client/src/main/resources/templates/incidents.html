@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Incidents')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<div class="container">
+    <h1 class="h4 mb-3">Incidents</h1>
+
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}">Error</div>
+
+    <form class="row g-2 mb-4" method="get" th:action="@{/incidents}">
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="">All statuses</option>
+                <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
+                        th:selected="${s == status}">STATUS</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="type" class="form-select">
+                <option value="">All types</option>
+                <option th:each="t : ${types}" th:value="${t}" th:text="${t}"
+                        th:selected="${t == type}">TYPE</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="sectorId" class="form-select">
+                <option value="">All sectors</option>
+                <option th:each="s : ${sectors}" th:value="${s.id()}" th:text="${s.name()}"
+                        th:selected="${s.id() == sectorId}">Sector</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="from" class="form-control" th:value="${from}">
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="to" class="form-control" th:value="${to}">
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button class="btn btn-success">Filter</button>
+            <a class="btn btn-outline-secondary" th:href="@{/incidents}">Clear</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+            <tr>
+                <th>#</th><th>Title</th><th>Type</th><th>Severity</th>
+                <th>Status</th><th>Sector</th><th>Occurred on</th><th>Registered by</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="i : ${incidents}">
+                <td th:text="${i.id()}">1</td>
+                <td><a th:href="@{/incidents/{id}(id=${i.id()})}" th:text="${i.title()}">Title</a></td>
+                <td th:text="${i.type()}">TYPE</td>
+                <td><span class="badge" th:classappend="${@statusStyle.severity(i.severity())}"
+                          th:text="${i.severity()}">LOW</span></td>
+                <td><span class="badge" th:classappend="${@statusStyle.status(i.status())}"
+                          th:text="${i.status()}">OPEN</span></td>
+                <td th:text="${i.sector()}">Sector</td>
+                <td th:text="${#temporals.format(i.occurredOn(), 'dd/MM/yyyy')}">01/01/2026</td>
+                <td th:text="${i.registeredBy()}">User</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(incidents)}">
+                <td colspan="8" class="text-center text-muted py-4">No incidents found.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

@@ -6,7 +6,7 @@
 <div class="container">
     <h1 class="h4">Welcome, <span th:text="${currentUser.name}">User</span></h1>
     <p class="text-muted">Signed in as <span th:text="${currentUser.email}">email</span>.</p>
-    <p>The incident screens will appear here in the next step.</p>
+    <a class="btn btn-success" th:href="@{/incidents}">View incidents</a>
 </div>
 </body>
 </html>
