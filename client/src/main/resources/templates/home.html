@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Home')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<div class="container">
+    <h1 class="h4">Welcome, <span th:text="${currentUser.name}">User</span></h1>
+    <p class="text-muted">Signed in as <span th:text="${currentUser.email}">email</span>.</p>
+    <p>The incident screens will appear here in the next step.</p>
+</div>
+</body>
+</html>
