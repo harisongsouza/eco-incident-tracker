@@ -13,6 +13,11 @@
             <a class="navbar-brand" th:href="@{/}">Environmental Incidents</a>
             <a class="nav-link text-white" th:if="${currentUser != null}"
                th:href="@{/incidents}">Incidents</a>
+            <a class="nav-link text-white" th:if="${currentUser != null}"
+               th:href="@{/my-actions}">My actions</a>
+            <a class="nav-link text-white"
+               th:if="${currentUser != null and (currentUser.officer or currentUser.manager)}"
+               th:href="@{/reports}">Reports</a>
         </div>
         <div class="d-flex align-items-center text-white" th:if="${currentUser != null}">
             <span class="me-3">

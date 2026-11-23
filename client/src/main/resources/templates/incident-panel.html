@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="panel"
+     th:if="${currentUser.officer and (incident.status() == 'OPEN' or incident.status() == 'UNDER_ANALYSIS' or incident.status() == 'AWAITING_VERIFICATION')}"
+     class="card border-success mb-4">
+    <div class="card-header bg-success text-white">Next step</div>
+    <div class="card-body">
+
+        <!-- OPEN: start the analysis -->
+        <div th:if="${incident.status() == 'OPEN'}" class="mb-3">
+            <p class="mb-2">This incident was reported and has not been analyzed yet.</p>
+            <form th:action="@{/incidents/{id}/analyze(id=${incident.id()})}" method="post">
+                <button class="btn btn-success">Start analysis</button>
+            </form>
+        </div>
+
+        <!-- UNDER_ANALYSIS: root cause, actions, start execution -->
+        <div th:if="${incident.status() == 'UNDER_ANALYSIS'}">
+            <form class="mb-4" th:action="@{/incidents/{id}/root-cause(id=${incident.id()})}" method="post">
+                <label class="form-label fw-bold" for="rootCause">Root cause</label>
+                <textarea class="form-control mb-2" id="rootCause" name="rootCause" rows="2"
+                          maxlength="2000" required th:text="${incident.rootCause()}"></textarea>
+                <button class="btn btn-outline-success btn-sm">Save root cause</button>
+            </form>
+
+            <form class="mb-4" th:action="@{/incidents/{id}/actions(id=${incident.id()})}" method="post">
+                <div class="fw-bold mb-2">Add corrective action</div>
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <input class="form-control" name="description" placeholder="What must be done"
+                               maxlength="500" required>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="responsibleId" required>
+                            <option value="">Responsible...</option>
+                            <option th:each="u : ${users}" th:value="${u.id()}"
+                                    th:text="${u.name()} + ' (' + ${u.role()} + ')'">User</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input class="form-control" type="date" name="deadline" required
+                               th:min="${#temporals.format(#temporals.createToday().plusDays(1), 'yyyy-MM-dd')}">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-success w-100">Add</button>
+                    </div>
+                </div>
+            </form>
+
+            <form th:action="@{/incidents/{id}/start-execution(id=${incident.id()})}" method="post">
+                <button class="btn btn-success"
+                        th:disabled="${incident.rootCause() == null or !hasActionsInCycle}">Start execution</button>
+                <span class="text-muted small ms-2"
+                      th:if="${incident.rootCause() == null or !hasActionsInCycle}">
+                    Requires a root cause and at least one action in this cycle.
+                </span>
+            </form>
+        </div>
+
+        <!-- AWAITING_VERIFICATION: effectiveness check -->
+        <form th:if="${incident.status() == 'AWAITING_VERIFICATION'}"
+              th:action="@{/incidents/{id}/checks(id=${incident.id()})}" method="post">
+            <div class="fw-bold mb-2">Did the actions solve the problem?</div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="effective" id="eff-yes" value="true" required>
+                <label class="form-check-label" for="eff-yes">Yes, effective (closes the incident)</label>
+            </div>
+            <div class="form-check form-check-inline mb-2">
+                <input class="form-check-input" type="radio" name="effective" id="eff-no" value="false">
+                <label class="form-check-label" for="eff-no">No (starts a new cycle)</label>
+            </div>
+            <textarea class="form-control mb-2" name="opinion" rows="2" maxlength="1000"
+                      placeholder="Opinion" required></textarea>
+            <button class="btn btn-success">Register verification</button>
+        </form>
+
+        <!-- OPEN or UNDER_ANALYSIS: dismiss -->
+        <form th:if="${incident.status() == 'OPEN' or incident.status() == 'UNDER_ANALYSIS'}"
+              class="mt-4 pt-3 border-top"
+              th:action="@{/incidents/{id}/dismiss(id=${incident.id()})}" method="post">
+            <div class="input-group">
+                <input class="form-control" name="justification" maxlength="400" required
+                       placeholder="Justification to dismiss (not an environmental issue, duplicate...)">
+                <button class="btn btn-outline-danger">Dismiss</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Reports')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<div class="container">
+    <h1 class="h4 mb-3">Reports</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <span class="text-muted">Total incidents</span>
+            <span class="fs-3 ms-2" th:text="${summary.total()}">0</span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <h2 class="h6">By status</h2>
+            <div class="mb-2" th:each="e : ${summary.byStatus()}">
+                <div class="d-flex justify-content-between">
+                    <span class="badge" th:classappend="${@statusStyle.status(e.key)}" th:text="${e.key}">STATUS</span>
+                    <span th:text="${e.value}">0</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-success"
+                         th:style="'width: ' + ${summary.percent(e.value)} + '%'"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <h2 class="h6">By type</h2>
+            <div class="mb-2" th:each="e : ${summary.byType()}">
+                <div class="d-flex justify-content-between">
+                    <span th:text="${e.key}">TYPE</span>
+                    <span th:text="${e.value}">0</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-success"
+                         th:style="'width: ' + ${summary.percent(e.value)} + '%'"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <h2 class="h6">By sector</h2>
+            <div class="mb-2" th:each="e : ${summary.bySector()}">
+                <div class="d-flex justify-content-between">
+                    <span th:text="${e.key}">Sector</span>
+                    <span th:text="${e.value}">0</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-success"
+                         th:style="'width: ' + ${summary.percent(e.value)} + '%'"></div>
+                </div>
+            </div>
+            <div class="text-muted small" th:if="${#maps.isEmpty(summary.bySector())}">No incidents yet.</div>
+        </div>
+    </div>
+
+    <h2 class="h5">Overdue actions</h2>
+    <div class="table-responsive mb-5">
+        <table class="table align-middle">
+            <thead>
+            <tr><th>Incident</th><th>Action</th><th>Responsible</th><th>Deadline</th><th>Days overdue</th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="o : ${overdue}" class="table-danger">
+                <td>
+                    <a th:href="@{/incidents/{id}(id=${o.incidentId()})}"
+                       th:text="'#' + ${o.incidentId()} + ' ' + ${o.incidentTitle()}">Incident</a>
+                </td>
+                <td th:text="${o.description()}">Description</td>
+                <td th:text="${o.responsible()}">Name</td>
+                <td th:text="${#temporals.format(o.deadline(), 'dd/MM/yyyy')}">date</td>
+                <td th:text="${o.daysOverdue()}">1</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(overdue)}">
+                <td colspan="5" class="text-center text-muted py-4">No overdue actions.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

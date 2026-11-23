@@ -6,6 +6,9 @@
 <div class="container">
     <a class="btn btn-sm btn-outline-secondary mb-3" th:href="@{/incidents}">&larr; Back to list</a>
 
+    <div class="alert alert-success" th:if="${success}" th:text="${success}">Done</div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}">Error</div>
+
     <div class="d-flex justify-content-between align-items-start mb-3">
         <h1 class="h4 mb-0">
             #<span th:text="${incident.id()}">1</span>
@@ -48,12 +51,14 @@
         </div>
     </div>
 
+    <div th:replace="~{incident-panel :: panel}"></div>
+
     <h2 class="h5">Corrective actions</h2>
     <div class="table-responsive mb-4">
         <table class="table align-middle">
             <thead>
             <tr><th>Cycle</th><th>Description</th><th>Responsible</th>
-                <th>Deadline</th><th>Status</th><th>Completion note</th></tr>
+                <th>Deadline</th><th>Status</th><th>Completion note</th><th></th></tr>
             </thead>
             <tbody>
             <tr th:each="a : ${actions}" th:classappend="${a.overdue()} ? 'table-danger'">
@@ -66,9 +71,19 @@
                 </td>
                 <td th:text="${a.status()}">PENDING</td>
                 <td th:text="${a.completionNote()}">Note</td>
+                <td>
+                    <form th:if="${a.status() == 'PENDING' and incident.status() == 'IN_PROGRESS' and (currentUser.officer or currentUser.id == a.responsibleId())}"
+                          th:action="@{/corrective-actions/{id}/complete(id=${a.id()})}" method="post"
+                          class="d-flex gap-1">
+                        <input type="hidden" name="incidentId" th:value="${incident.id()}">
+                        <input class="form-control form-control-sm" name="note" maxlength="500"
+                               placeholder="What was done" required>
+                        <button class="btn btn-sm btn-success">Complete</button>
+                    </form>
+                </td>
             </tr>
             <tr th:if="${#lists.isEmpty(actions)}">
-                <td colspan="6" class="text-muted text-center">No actions registered.</td>
+                <td colspan="7" class="text-muted text-center">No actions registered.</td>
             </tr>
             </tbody>
         </table>

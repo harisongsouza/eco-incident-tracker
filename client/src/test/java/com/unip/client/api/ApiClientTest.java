@@ -1,36 +1,48 @@
 package com.unip.client.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unip.client.dto.IncidentDto;
+import com.unip.client.dto.MyActionDto;
 import com.unip.client.dto.UserDto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.restclient.test.autoconfigure.RestClientTest;
-
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
+import com.unip.client.dto.SummaryDto;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
-@RestClientTest(ApiClient.class)
 class ApiClientTest {
 
-    @Autowired ApiClient api;
-    @Autowired MockRestServiceServer server;
-
     private static final String INCIDENT_JSON = """
-    {"id":1,"title":"Dripping tap","description":"Drips","type":"WASTE","severity":"LOW",
-     "status":"OPEN","sector":"Maintenance","occurredOn":"2026-10-28",
-     "registeredAt":"2026-10-28T10:15:30.123456","cycle":1,"rootCause":null,
-     "closedAt":null,"registeredBy":"Employee One"}""";
+        {"id":1,"title":"Dripping tap","description":"Drips","type":"WASTE","severity":"LOW",
+         "status":"OPEN","sector":"Maintenance","occurredOn":"2026-10-28",
+         "registeredAt":"2026-10-28T10:15:30.123456","cycle":1,"rootCause":null,
+         "closedAt":null,"registeredBy":"Employee One"}""";
+
+    private MockRestServiceServer server;
+    private ApiClient api;
+
+    @BeforeEach
+    void setUp() {
+        RestClient.Builder builder = RestClient.builder();
+        server = MockRestServiceServer.bindTo(builder).build(); // bind BEFORE building the client
+        api = new ApiClient(builder, "http://localhost:8080", new ObjectMapper());
+    }
 
     @Test
     void meSendsAuthorizationAndParsesUser() {
@@ -107,5 +119,87 @@ class ApiClientTest {
 
         assertEquals(404, ex.getStatus());
         assertEquals("Incident not found", ex.getMessage());
+    }
+
+    @Test
+    void analyzeIsAPostWithoutBody() {
+        server.expect(requestTo("http://localhost:8080/incidents/1/analyze"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Basic abc"))
+                .andRespond(withSuccess(INCIDENT_JSON.replace("\"OPEN\"", "\"UNDER_ANALYSIS\""),
+                        MediaType.APPLICATION_JSON));
+
+        assertEquals("UNDER_ANALYSIS", api.analyze("Basic abc", 1L).status());
+    }
+
+    @Test
+    void registerIncidentSendsTheJsonBody() {
+        server.expect(requestTo("http://localhost:8080/incidents"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.title").value("Dripping tap"))
+                .andExpect(jsonPath("$.sectorId").value(1))
+                .andExpect(jsonPath("$.occurredOn").value("2026-10-28"))
+                .andRespond(withStatus(HttpStatus.CREATED)
+                        .contentType(MediaType.APPLICATION_JSON).body(INCIDENT_JSON));
+
+        IncidentDto created = api.registerIncident("Basic abc", new ApiRequests.Incident(
+                "Dripping tap", "Drips", "WASTE", "LOW", 1L, LocalDate.of(2026, 10, 28)));
+
+        assertEquals(1L, created.id());
+    }
+
+    @Test
+    void fieldErrorsAreAppendedToTheMessage() {
+        server.expect(requestTo("http://localhost:8080/incidents"))
+                .andRespond(withStatus(HttpStatus.BAD_REQUEST)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"detail\":\"Validation failed\",\"errors\":{\"title\":\"must not be blank\"}}"));
+
+        ApiException ex = assertThrows(ApiException.class, () -> api.registerIncident("Basic abc",
+                new ApiRequests.Incident("", "x", "WASTE", "LOW", 1L, LocalDate.of(2026, 10, 28))));
+
+        assertEquals(400, ex.getStatus());
+        assertEquals("Validation failed (title: must not be blank)", ex.getMessage());
+    }
+
+    @Test
+    void summaryParsesTheMapsKeepingTheirOrder() {
+        server.expect(requestTo("http://localhost:8080/reports/summary"))
+                .andRespond(withSuccess("""
+            {"total":3,"byStatus":{"OPEN":2,"CLOSED":1},
+             "byType":{"LEAK":3},"bySector":{"Maintenance":3}}""", MediaType.APPLICATION_JSON));
+
+        SummaryDto summary = api.summary("Basic abc");
+
+        assertEquals(3, summary.total());
+        assertEquals(2L, summary.byStatus().get("OPEN"));
+        assertEquals(List.of("OPEN", "CLOSED"), List.copyOf(summary.byStatus().keySet()));
+    }
+
+    @Test
+    void myActionsParsesTheList() {
+        server.expect(requestTo("http://localhost:8080/corrective-actions/mine"))
+                .andRespond(withSuccess("""
+            [{"actionId":7,"incidentId":1,"incidentTitle":"Dripping tap",
+              "incidentStatus":"IN_PROGRESS","description":"Replace gasket",
+              "deadline":"2026-11-30","cycle":1}]""", MediaType.APPLICATION_JSON));
+
+        List<MyActionDto> result = api.myActions("Basic abc");
+
+        assertEquals(1, result.size());
+        assertEquals("IN_PROGRESS", result.get(0).incidentStatus());
+        assertEquals(LocalDate.of(2026, 11, 30), result.get(0).deadline());
+    }
+
+    @Test
+    void forbiddenWithoutBodyGetsAReadableMessage() {
+        server.expect(requestTo("http://localhost:8080/reports/summary"))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+
+        ApiException ex = assertThrows(ApiException.class, () -> api.summary("Basic abc"));
+
+        assertEquals(403, ex.getStatus());
+        assertEquals("You do not have permission for this operation", ex.getMessage());
     }
 }

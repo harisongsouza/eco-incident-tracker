@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('My actions')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+<div class="container">
+    <h1 class="h4 mb-3">My actions</h1>
+
+    <div class="alert alert-success" th:if="${success}" th:text="${success}">Done</div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}">Error</div>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+            <tr><th>Incident</th><th>Action</th><th>Deadline</th><th>Incident status</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${actions}" th:classappend="${a.overdue()} ? 'table-danger'">
+                <td>
+                    <a th:href="@{/incidents/{id}(id=${a.incidentId()})}"
+                       th:text="'#' + ${a.incidentId()} + ' ' + ${a.incidentTitle()}">Incident</a>
+                </td>
+                <td th:text="${a.description()}">Description</td>
+                <td>
+                    <span th:text="${#temporals.format(a.deadline(), 'dd/MM/yyyy')}">date</span>
+                    <span class="badge bg-danger" th:if="${a.overdue()}">Overdue</span>
+                </td>
+                <td><span class="badge" th:classappend="${@statusStyle.status(a.incidentStatus())}"
+                          th:text="${a.incidentStatus()}">STATUS</span></td>
+                <td>
+                    <form th:if="${a.incidentStatus() == 'IN_PROGRESS'}"
+                          th:action="@{/corrective-actions/{id}/complete(id=${a.actionId()})}"
+                          method="post" class="d-flex gap-1">
+                        <input type="hidden" name="incidentId" th:value="${a.incidentId()}">
+                        <input type="hidden" name="returnTo" value="my-actions">
+                        <input class="form-control form-control-sm" name="note" maxlength="500"
+                               placeholder="What was done" required>
+                        <button class="btn btn-sm btn-success">Complete</button>
+                    </form>
+                    <span class="text-muted small" th:unless="${a.incidentStatus() == 'IN_PROGRESS'}">
+                        Waiting for the officer to start execution
+                    </span>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(actions)}">
+                <td colspan="5" class="text-center text-muted py-4">You have no pending actions.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
