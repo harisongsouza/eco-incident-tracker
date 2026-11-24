@@ -17,8 +17,7 @@ import com.unip.client.dto.SummaryDto;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -201,5 +200,15 @@ class ApiClientTest {
 
         assertEquals(403, ex.getStatus());
         assertEquals("You do not have permission for this operation", ex.getMessage());
+    }
+
+    @Test
+    void reportPdfReturnsTheRawBytes() {
+        byte[] pdf = "%PDF-fake".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        server.expect(requestTo("http://localhost:8080/reports/pdf"))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Basic abc"))
+                .andRespond(withSuccess(pdf, MediaType.APPLICATION_PDF));
+
+        assertArrayEquals(pdf, api.reportPdf("Basic abc"));
     }
 }

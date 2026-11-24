@@ -72,6 +72,11 @@ public class ApiClient {
                 new ParameterizedTypeReference<List<MyActionDto>>() {});
     }
 
+    public byte[] reportPdf(String auth) {
+        return get(auth, b -> b.path("/reports/pdf").build(),
+                new ParameterizedTypeReference<byte[]>() {});
+    }
+
     /** Blank or null filters are simply not sent. */
     public List<IncidentDto> searchIncidents(String auth, String status, String type,
                                              Long sectorId, LocalDate from, LocalDate to) {

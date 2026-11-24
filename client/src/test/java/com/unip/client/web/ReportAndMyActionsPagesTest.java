@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -127,5 +129,37 @@ class ReportAndMyActionsPagesTest {
 
         mvc.perform(get("/my-actions").session(session(2, "EMPLOYEE")))
                 .andExpect(content().string(containsString("no pending actions")));
+    }
+
+    @Test
+    void reportsPageHasTheDownloadLink() throws Exception {
+        when(api.summary(anyString())).thenReturn(new SummaryDto(0, Map.of(), Map.of(), Map.of()));
+        when(api.overdue(anyString())).thenReturn(List.of());
+
+        mvc.perform(get("/reports").session(session(3, "ENVIRONMENTAL_OFFICER")))
+                .andExpect(content().string(containsString("/reports/pdf")));
+    }
+
+    @Test
+    void pdfIsRelayedAsADownload() throws Exception {
+        byte[] pdf = "%PDF-fake".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        when(api.reportPdf(anyString())).thenReturn(pdf);
+
+        mvc.perform(get("/reports/pdf").session(session(3, "ENVIRONMENTAL_OFFICER")))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
+                        containsString("incident-report.pdf")))
+                .andExpect(content().bytes(pdf));
+    }
+
+    @Test
+    void pdfRefusedByTheApiShowsTheErrorPage() throws Exception {
+        when(api.reportPdf(anyString()))
+                .thenThrow(new ApiException(403, "You do not have permission for this operation"));
+
+        mvc.perform(get("/reports/pdf").session(session(1, "EMPLOYEE")))
+                .andExpect(view().name("api-error.html"))
+                .andExpect(content().string(containsString("You do not have permission")));
     }
 }
