@@ -21,4 +21,11 @@ public interface CorrectiveActionRepository extends JpaRepository<CorrectiveActi
     List<CorrectiveAction> findOverdue(@Param("today") LocalDate today,
                                        @Param("pending") ActionStatus pending,
                                        @Param("active") Collection<IncidentStatus> active);
+
+    @Query("select a from CorrectiveAction a "
+            + "where a.responsible.id = :userId and a.status = :pending and a.incident.status in :active "
+            + "order by a.deadline asc")
+    List<CorrectiveAction> findPendingForUser(@Param("userId") Long userId,
+                                              @Param("pending") ActionStatus pending,
+                                              @Param("active") Collection<IncidentStatus> active);
 }

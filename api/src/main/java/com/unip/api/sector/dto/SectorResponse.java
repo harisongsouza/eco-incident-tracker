@@ -1,4 +1,3 @@
 package com.unip.api.sector.dto;
 
-public class SectorResponse {
-}
+public record SectorResponse(Long id, String name) {}
